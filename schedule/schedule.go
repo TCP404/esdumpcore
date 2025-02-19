@@ -177,11 +177,16 @@ func (s *Scheduler) BuildWithETL(
 		etractFunc,
 		transformFunc,
 		s.outputer.Load,
-		etl.WithReporter[E, L](etl.ProgressReporterFactory(total)),
-		etl.WithSweepCSize[E, L](1000),
-		etl.WithExtractBatchSize[E, L](100),
-		etl.WithTransformBatchSize[E, L](100),
-		etl.WithLoadBatchSize[E, L](100),
+		append(
+			[]etl.Option[E, L]{
+				etl.WithReporter[E, L](etl.ProgressReporterFactory(total)),
+				etl.WithSweepCSize[E, L](1000),
+				etl.WithExtractBatchSize[E, L](100),
+				etl.WithTransformBatchSize[E, L](100),
+				etl.WithLoadBatchSize[E, L](100),
+			},
+			opts...,
+		)...,
 	)
 	return ins, nil
 }

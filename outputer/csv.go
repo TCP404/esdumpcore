@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"os"
 	"sort"
@@ -60,6 +61,22 @@ func (o *csvOutputer[T]) initHeader(header []string) {
 	o.writer.Write(o.header)
 }
 
+func toString(v interface{}) string {
+	switch val := v.(type) {
+	case string:
+		return val
+	case []byte:
+		return string(val)
+	default:
+		se, err := cast.ToStringE(val)
+		if err != nil {
+			b, _ := json.Marshal(val)
+			se = string(b)
+		}
+		return se
+	}
+}
+
 func (o *csvOutputer[T]) Load(batch []T) (int, error) {
 	if o.writer == nil || o.f == nil {
 		if err := o.Init(); err != nil {
@@ -83,7 +100,7 @@ func (o *csvOutputer[T]) Load(batch []T) (int, error) {
 				value = append(value, "")
 				continue
 			}
-			value = append(value, FormatCSV(cast.ToString(val)))
+			value = append(value, FormatCSV(toString(val)))
 		}
 		o.writer.Write(value)
 	}
