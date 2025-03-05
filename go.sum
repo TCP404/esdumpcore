@@ -1,5 +1,5 @@
-github.com/TCP404/eutil v0.0.9 h1:cmWLCUJ9muWxRCD+UP+HHZ5UpkHQtdpZc6S6lz7wuR4=
-github.com/TCP404/eutil v0.0.9/go.mod h1:K+yaXPtPpUxa5n3/EyaEJ2cRKlswaDVt/e0b3BKw8vs=
+github.com/TCP404/eutil v0.0.10 h1:Y/fgHh4NfCkuegErpFFRCzoP3tpurpjTYqsZgyIV0U8=
+github.com/TCP404/eutil v0.0.10/go.mod h1:K+yaXPtPpUxa5n3/EyaEJ2cRKlswaDVt/e0b3BKw8vs=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/elastic/go-elasticsearch/v7 v7.17.10 h1:TCQ8i4PmIJuBunvBS6bwT2ybzVFxxUhhltAs3Gyu1yo=

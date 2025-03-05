@@ -1,9 +1,9 @@
 module github.com/TCP404/esdumpcore
 
-go 1.23.3
+go 1.23
 
 require (
-	github.com/TCP404/eutil v0.0.9
+	github.com/TCP404/eutil v0.0.10
 	github.com/elastic/go-elasticsearch/v7 v7.17.10
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cast v1.7.0

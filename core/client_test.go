@@ -48,7 +48,7 @@ func Test_ESClient_Scroll(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewQueryConfig() error = %v", err)
 	}
-	cli.FindWithConsume(
+	err = cli.FindWithConsume(
 		context.TODO(),
 		conf,
 		func(c chan Hit) {
@@ -57,5 +57,7 @@ func Test_ESClient_Scroll(t *testing.T) {
 			}
 		},
 	)
-
+	if err != nil {
+		t.Errorf("ESClient.FindWithConsume() error = %v", err)
+	}
 }

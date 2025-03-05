@@ -28,17 +28,18 @@ func ESRequestErr(err error) ESRequestError {
 
 type ESResponseError struct {
 	*cerr.Err
-	status string
+	status int
 	body   string
 }
 
-func ESResponseErr(err error, status string, body string) ESResponseError {
+func ESResponseErr(err error, status int, body string) ESResponseError {
 	var nerr *cerr.Err
 	if err != nil {
-		nerr = cerr.Wrap(err, "es response error")
+		nerr = cerr.Wrapf(err, "es response error. status: %v, body: %v", status, body)
 	} else {
-		nerr = cerr.New("es response error")
+		nerr = cerr.Newf("es response error. status: %v, body: %v", status, body)
 	}
+	nerr.SetCode(status)
 	return ESResponseError{
 		status: status,
 		body:   body,

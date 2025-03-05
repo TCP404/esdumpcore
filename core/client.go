@@ -29,9 +29,9 @@ func doRequest(ctx context.Context, cli *elasticsearch.Client, req esapi.Request
 			return nil, DecodeErr(err)
 		}
 		if b, err := json.Marshal(errorInfo); err == nil {
-			return nil, ESResponseErr(nil, res.Status(), string(b))
+			return nil, ESResponseErr(nil, res.StatusCode, string(b))
 		}
-		return nil, ESResponseErr(nil, res.Status(), fmt.Sprintf("%+v", errorInfo))
+		return nil, ESResponseErr(nil, res.StatusCode, fmt.Sprintf("%+v", errorInfo))
 	}
 	var initResult ESResponse
 	if err = json.NewDecoder(res.Body).Decode(&initResult); err != nil {
