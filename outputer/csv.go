@@ -2,7 +2,6 @@ package outputer
 
 import (
 	"bufio"
-	"context"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -55,25 +54,28 @@ func (o *csvOutputer[T]) Close() (err error) {
 	return err
 }
 
-func (o *csvOutputer[T]) initHeader(header []string) {
+func (o *csvOutputer[T]) initHeader(header []string) error {
 	o.header = header
 	sort.Strings(o.header)
-	o.writer.Write(o.header)
+	return o.writer.Write(o.header)
 }
 
-func toString(v interface{}) string {
+func toString(v interface{}) (string, error) {
 	switch val := v.(type) {
 	case string:
-		return val
+		return val, nil
 	case []byte:
-		return string(val)
+		return string(val), nil
 	default:
-		se, err := cast.ToStringE(val)
+		valStr, err := cast.ToStringE(val)
 		if err != nil {
-			b, _ := json.Marshal(val)
-			se = string(b)
+			b, err := json.Marshal(val)
+			if err != nil {
+				return "", err
+			}
+			valStr = string(b)
 		}
-		return se
+		return valStr, nil
 	}
 }
 
@@ -88,49 +90,31 @@ func (o *csvOutputer[T]) Load(batch []T) (int, error) {
 		return 0, nil
 	}
 	if len(o.header) == 0 {
-		o.initHeader(batch[0].GetHeader())
+		if err := o.initHeader(batch[0].GetHeader()); err != nil {
+			return 0, err
+		}
 	}
 
 	for _, v := range batch {
 		row := v.GetValue()
 		value := make([]string, 0)
-		for _, k := range o.header {
-			val, ok := row[k]
+		for _, col := range o.header {
+			val, ok := row[col]
 			if !ok {
 				value = append(value, "")
 				continue
 			}
-			value = append(value, FormatCSV(toString(val)))
+			valStr, err := toString(val)
+			if err != nil {
+				return 0, err
+			}
+			value = append(value, FormatCSV(valStr))
 		}
-		o.writer.Write(value)
+		if err := o.writer.Write(value); err != nil {
+			return 0, err
+		}
 	}
 	return len(batch), nil
-}
-
-func (o *csvOutputer[T]) Output(ctx context.Context, pipeline chan core.M) (err error) {
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case row, ok := <-pipeline:
-			if !ok {
-				return nil
-			}
-			if len(o.header) == 0 {
-				o.initHeader(row.GetHeader())
-			}
-			value := make([]string, 0)
-			for _, k := range o.header {
-				val, ok := row[k]
-				if !ok {
-					value = append(value, "")
-					continue
-				}
-				value = append(value, FormatCSV(cast.ToString(val)))
-			}
-			o.writer.Write(value)
-		}
-	}
 }
 
 func FormatCSV(val string) string {

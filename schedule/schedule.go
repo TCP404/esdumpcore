@@ -3,15 +3,11 @@ package schedule
 import (
 	"context"
 	"fmt"
-	"log/slog"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/TCP404/esdumpcore/core"
 	"github.com/TCP404/esdumpcore/outputer"
 	"github.com/TCP404/eutil/etl"
-	"golang.org/x/sync/errgroup"
 )
 
 type E = core.Hit
@@ -80,70 +76,70 @@ func (s *Scheduler) BuildQuery() (*core.QueryConfig, error) {
 	return queryConfig, nil
 }
 
-func (s *Scheduler) Run(queryConfig *core.QueryConfig, outputHandler outputer.Outputer[L]) error {
+// func (s *Scheduler) Run(queryConfig *core.QueryConfig, outputHandler outputer.Outputer[L]) error {
 
-	ctx, cancel := signal.NotifyContext(context.TODO(), syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-	g, ctx := errgroup.WithContext(ctx)
+// 	ctx, cancel := signal.NotifyContext(context.TODO(), syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+// 	g, ctx := errgroup.WithContext(ctx)
 
-	slog.Debug("query count body", slog.String("body", string(queryConfig.BodyBytes)))
-	count, err := s.client.Count(ctx, queryConfig)
-	if err != nil {
-		cancel()
-		return err
-	}
+// 	slog.Debug("query count body", slog.String("body", string(queryConfig.BodyBytes)))
+// 	count, err := s.client.Count(ctx, queryConfig)
+// 	if err != nil {
+// 		cancel()
+// 		return err
+// 	}
 
-	slog.Info("query count", slog.Int64("total:", count))
-	if count == 0 {
-		return nil
-	}
+// 	slog.Info("query count", slog.Int64("total:", count))
+// 	if count == 0 {
+// 		return nil
+// 	}
 
-	outputChan := make(chan core.M, s.chanSize)
-	defer func() {
-		if err := recover(); err != nil {
-			// close channel if the outputChan is not closed
-			_, ok := <-outputChan
-			if ok {
-				close(outputChan)
-			}
-		}
-	}()
-	s.outputer = outputHandler
-	g.Go(func() (err error) {
-		if err = s.outputer.Init(); err != nil {
-			cancel()
-			return err
-		}
-		defer func() {
-			if err = s.outputer.Close(); err != nil {
-				cancel()
-			}
-		}()
-		if err = s.outputer.Output(ctx, outputChan); err != nil {
-			cancel()
-			return err
-		}
-		return nil
-	})
+// 	outputChan := make(chan core.M, s.chanSize)
+// 	defer func() {
+// 		if err := recover(); err != nil {
+// 			// close channel if the outputChan is not closed
+// 			_, ok := <-outputChan
+// 			if ok {
+// 				close(outputChan)
+// 			}
+// 		}
+// 	}()
+// 	s.outputer = outputHandler
+// 	g.Go(func() (err error) {
+// 		if err = s.outputer.Init(); err != nil {
+// 			cancel()
+// 			return err
+// 		}
+// 		defer func() {
+// 			if err = s.outputer.Close(); err != nil {
+// 				cancel()
+// 			}
+// 		}()
+// 		if err = s.outputer.Output(ctx, outputChan); err != nil {
+// 			cancel()
+// 			return err
+// 		}
+// 		return nil
+// 	})
 
-	g.Go(func() error {
-		defer func() { close(outputChan) }()
+// 	g.Go(func() error {
+// 		defer func() { close(outputChan) }()
 
-		return s.client.FindWithConsume(
-			ctx,
-			queryConfig.With(core.WithBatchSize(1000)),
-			func(c chan core.Hit) {
-				for v := range c {
-					outputChan <- v.Source
-				}
-			},
-		)
-	})
+// 		return s.client.FindWithConsume(
+// 			ctx,
+// 			queryConfig.With(core.WithBatchSize(1000)),
+// 			func(c chan core.Hit) {
+// 				for v := range c {
+// 					outputChan <- v.Source
+// 				}
+// 			},
+// 		)
+// 	})
 
-	if err := g.Wait(); err != nil {
-		return err
-	}
-	return nil
-}
+// 	if err := g.Wait(); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (s *Scheduler) RunETL(ctx context.Context, queryConfig *core.QueryConfig, transformFunc etl.TransformFunc[E, L], total uint64) (err error) {
 	if err := s.outputer.Init(); err != nil {
